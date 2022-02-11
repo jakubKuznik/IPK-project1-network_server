@@ -5,7 +5,16 @@
 
 // Included libraries 
 #include <stdio.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include <string.h>
+
+#define DECIMAL 10
 
 
-
-void foo();
+/**
+ * Parse args 
+ * usually return port number
+ * return -1 if args are in bad format  
+ */
+int parse_args(int argc, char *argv[]);
