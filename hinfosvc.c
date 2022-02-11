@@ -35,25 +35,16 @@ int main(int argc, char *argv[]){
     return 0;
 }
 
-
 /**
- * Return computer network domain name, 
- * that is stored in: /proc/sys/kernel/hostname
- * 
- * returns NULL if not sucessfull. 
- * U HAVE TO FREE MEMORY !!!
-*/
-char* hostname(){
-    FILE *f = NULL;
-    f = fopen("/proc/sys/kernel/hostname", "r");
-    if(f == NULL)
-        goto error_hostname_1;
-
+ * Return string. 
+ * Return null if error  
+ */
+char * read_file(FILE *f){
 
     // there is two for last byte that has to be 0
-    char *hostname = malloc(2 * sizeof(char));
-    if(hostname == NULL)
-        goto error_hostname_3;
+    char *s = malloc(2 * sizeof(char));
+    if(s == NULL)
+        return NULL;
     
     int c = 0;      // character 
     int size = 2;   // size of array
@@ -62,17 +53,41 @@ char* hostname(){
     // store /proc/sys/kernel/hostname to variable hostname 
     while (c != EOF){
         c = fgetc(f);
-        hostname[i++] = c;
+        s[i++] = c;
 
-        char *tmp = realloc(hostname, sizeof(char) * (size + 1));
-        if(tmp == NULL) // realloc failed 
-            goto error_hostname_2;
+        char *tmp = realloc(s, sizeof(char) * (size + 1));
+        // realloc failed 
+        if(tmp == NULL){
+            free(s);
+            return NULL;
+        }
         size++;
-        hostname = tmp;
+        s = tmp;
     }
-    hostname[i] = 0;
+    // last byte has to be zero 
+    s[i] = 0;
+    return s;
+}
 
-    fclose(f);
+
+/**
+ * Return computer network domain name, 
+ * that is stored in: /proc/sys/kernel/hostname
+ * 
+ * returns NULL if not sucessfull. 
+ * U HAVE TO FREE MEMORY !!!
+*/
+char * hostname(){
+    FILE *f = NULL;
+    f = fopen("/proc/sys/kernel/hostname", "r");
+    if (f == NULL)
+        goto error_hostname_1;
+
+
+    char *hostname = read_file(f);
+    if (hostname == NULL)
+        goto error_hostname_2;
+
     return hostname;
 
 
@@ -83,12 +98,6 @@ error_hostname_1:
 
 error_hostname_2:
     fprintf(stderr,"MALLOC ERROR \n");    
-    free(hostname); 
-    fclose(f);
-    return NULL;
-
-error_hostname_3:
-    fprintf(stderr,"MALLOC ERROR \n");    
     fclose(f);
     return NULL;
 
@@ -96,8 +105,24 @@ error_hostname_3:
 
 /**
  * Return cpu computer cpu name with basic info.   
+ * 
+ * 
+ * call lscpu | grep Model\ name:
+ * 
  */
 char * cpu_name(){
+    FILE *f = NULL;
+    f = popen("lscpu | grep Model\\ name:", "r");
+
+
+
+
+    // popen return status of command that was executed by popen 
+    int status = fclose(f);
+    if(status == -1)
+        return -1;
+        //todo error
+
     return 0;
 }
 

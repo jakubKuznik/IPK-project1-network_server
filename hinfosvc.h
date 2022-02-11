@@ -27,7 +27,7 @@ int parse_args(int argc, char *argv[]);
  * returns NULL if not sucessfull. 
  * U HAVE TO FREE MEMORY !!!
 */
-char* hostname();
+char * hostname();
 
 /**
  * Return cpu computer cpu name with basic info.   
