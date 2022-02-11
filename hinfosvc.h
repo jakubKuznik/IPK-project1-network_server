@@ -21,9 +21,13 @@ int parse_args(int argc, char *argv[]);
 
 
 /**
- * Return computer network domain name. 
+ * Return computer network domain name, 
+ * that is stored in: /proc/sys/kernel/hostname
+ * 
+ * returns NULL if not sucessfull. 
+ * U HAVE TO FREE MEMORY !!!
 */
-char * hostname();
+char* hostname();
 
 /**
  * Return cpu computer cpu name with basic info.   
