@@ -18,3 +18,19 @@
  * return -1 if args are in bad format  
  */
 int parse_args(int argc, char *argv[]);
+
+
+/**
+ * Return computer network domain name. 
+*/
+char * hostname();
+
+/**
+ * Return cpu computer cpu name with basic info.   
+ */
+char * cpu_name();
+
+/**
+ * Return cpu usage info.  
+ */
+char * cpu_usage();

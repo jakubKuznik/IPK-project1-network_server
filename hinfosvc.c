@@ -22,10 +22,40 @@ int main(int argc, char *argv[]){
     int port_number; // Http server ll listen on this port.
 
     port_number = parse_args(argc, argv);
+    // Program error invalid arguments 
+    if(port_number == -1)
+        return -1;
+
+
+
 
 
     return 0;
 }
+
+
+/**
+ * Return computer network domain name. 
+*/
+char * hostname(){
+    return 0;
+}
+
+/**
+ * Return cpu computer cpu name with basic info.   
+ */
+char * cpu_name(){
+    return 0;
+}
+
+/**
+ * Return cpu usage info.  
+ */
+char * cpu_usage(){
+    return 0;
+}
+
+
     
 /*
 fprintf(stderr," \n");    
