@@ -10,6 +10,7 @@
 #include <string.h>
 
 #define DECIMAL 10
+#define INDENT 33 
 
 
 /**
@@ -18,6 +19,12 @@
  * return -1 if args are in bad format  
  */
 int parse_args(int argc, char *argv[]);
+
+/**
+ * Return string. 
+ * Return null if error  
+ */
+char * read_file(FILE *f);
 
 
 /**
@@ -31,6 +38,12 @@ char * hostname();
 
 /**
  * Return cpu computer cpu name with basic info.   
+ * 
+ * 
+ * call lscpu | grep Model\ name:
+ * 
+ * U HAVE TO FREE MEMORY !!! 
+ * 
  */
 char * cpu_name();
 

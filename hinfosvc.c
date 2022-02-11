@@ -26,7 +26,7 @@ int main(int argc, char *argv[]){
     if(port_number == -1)
         return -1;
 
-    char *d = hostname();
+    char *d = cpu_name();
     printf("%s",d);
     free(d);
 
@@ -93,7 +93,6 @@ char * hostname(){
 
 error_hostname_1:
     fprintf(stderr,"Cannot open: /proc/sys/kernel/hostname \n");    
-    fclose(f);
     return NULL;
 
 error_hostname_2:
@@ -109,21 +108,49 @@ error_hostname_2:
  * 
  * call lscpu | grep Model\ name:
  * 
+ * U HAVE TO FREE MEMORY !!! 
+ * 
  */
 char * cpu_name(){
     FILE *f = NULL;
     f = popen("lscpu | grep Model\\ name:", "r");
+    if (f == NULL) 
+        goto error_cpu_1;
 
 
-
+    char *cpu_name = read_file(f);
+    if (cpu_name == NULL)
+        goto error_cpu_2;
 
     // popen return status of command that was executed by popen 
     int status = fclose(f);
     if(status == -1)
-        return -1;
-        //todo error
+        goto error_cpu_1;
 
-    return 0;
+
+    // now ouptput is in this format:
+    // Model name:                      Intel(R) Core(TM) i7-4810MQ CPU @ 2.80GHz    return cpu_name;
+
+    // format i want is
+    // Intel(R) Core(TM) i7-4810MQ CPU @ 2.80GHz    return cpu_name;
+    long unsigned int i = 0;
+    for (; i <= strlen(cpu_name);){
+        if(i >= INDENT)
+            cpu_name[i-INDENT] = cpu_name[i];
+        i++;
+    }
+    cpu_name[i-INDENT-2] = 0;
+
+    return cpu_name;
+
+error_cpu_1:
+    fprintf(stderr,"lscpu | grep Model\\ name: FAILED\n");    
+    return NULL;
+
+error_cpu_2:
+    fprintf(stderr,"MALLOC ERROR\n");    
+    return NULL;
+
 }
 
 /**
