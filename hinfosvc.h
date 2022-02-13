@@ -16,18 +16,6 @@
 #define INDENT 33 
 #define MAX_STAT 2048 //Max lenght of /proc/stat first line 
 
-typedef struct usage
-{
-    int user;
-    int nice;
-    int system; 
-    int idle;
-    int iowait;
-    int irq;
-} usage;
-
-
-
 /**
  * Parse args 
  * usually return port number
@@ -74,8 +62,3 @@ char * get_first_line(FILE *f);
  * Return null if error  
  */
 char * read_file(FILE *f);
-
-/**
- * Get nth word from string  
- */
-int parse_nth_number(char *str, int n);

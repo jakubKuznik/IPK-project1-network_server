@@ -23,7 +23,6 @@ int main(int argc, char *argv[]){
     if(port_number == -1)
         return -1;
 
-    char *d = cpu_usage();
 
     return 0;
 }
@@ -165,35 +164,6 @@ char * get_first_line(FILE *f){
     return c;
 }
 
-/**
- * Get nth word from string  
- *
- *  TODO EOL(end) -1 if error  
- */
-int parse_nth_number(char *str, int n){
-    char c[MAX_STAT];
-    int space = 0;
-
-    for(int i = 0; i < MAX_STAT ;i++){
-        if (space == n){
-            while (str[i] == ' ')
-                i++;
-            for (int j = 0 ; ; j++){
-                if (str[i+j] == ' ' || str[i+j] == '\0' || str[i+j] == '\n')
-                    break;
-                c[j] = str[i+j];
-                c[j+1] = '\0';
-            }
-            return atoi(c);
-        }    
-        if (str[i] == '\n')
-            return 0;
-        else if (str[i] == ' ')
-            space++;
-    }
-    return -1; 
-}
-
 /* 
     from https://stackoverflow.com/questions/23367857/accurate-calculation-of-cpu-usage-given-in-percentage-in-linux
 
@@ -218,62 +188,74 @@ int parse_nth_number(char *str, int n){
 
 /**
  * Return cpu usage info. 
- * Return NULL if error 
+ * Return (-inf, -1) if error 
  * 
  * Calculate cpu usage from /proc/stat 
  * 
  * U HAVE TO FREE MEMORY!!
  */
-char * cpu_usage(){
+double cpu_usage(){
+    //     [0]     [1]    [2]     [3]       [4]    [5]   [6]      [7]    [8]    [9]
+    //     user    nice   system  idle      iowait irq   softirq  steal  guest  guest_nice
+    //cpu  74608   2520   24433   1117073   6176   4054  0        0      0      0
+    long double p[7], n[7], cpu_perc, p_sum, n_sum, totald, idleld; // previous new
     FILE *f = NULL;
-    f = fopen("/proc/stat", "r");
-    if (f == NULL)
-        goto error_usa_1;
-
-    char *prev = get_first_line(f);
-    if (prev == NULL)
-        goto error_usa_2;
-
-    sleep(1);          
-    fclose(f);
+   
     f = fopen("/proc/stat", "r");
     if (f == NULL)
         goto error_usa_1;
     
-    char *new = get_first_line(f);
-    if (new == NULL)
-        goto error_usa_2;
+    printf("%s", get_first_line(f));
+    fclose(f);
+    f = fopen("/proc/stat", "r");
+
+    fscanf(f,"%*s %Lf %Lf %Lf %Lf %LF %LF %LF",&p[0],&p[1],&p[2],&p[3],&p[4],&p[5],&p[6]);
+    fclose(f);
+    usleep(0.5);
+
+    f = fopen("/proc/stat", "r");
+    printf("%s", get_first_line(f));
+    fclose(f);
+    
+    f = fopen("/proc/stat", "r");
+    fscanf(f,"%*s %Lf %Lf %Lf %Lf %LF %LF %LF",&n[0],&n[1],&n[2],&n[3],&n[4],&n[5],&n[6]);
     fclose(f);
 
-//      user    nice   system  idle      iowait irq   softirq  steal  guest  guest_nice
-// cpu  74608   2520   24433   1117073   6176   4054  0        0      0      0
-
-    usage prev_us;
-    usage new_us;
-
-
-    printf("%s",prev);
-    printf("%s",new);
-
-    prev_us.user = parse_nth_number(prev, 2);
-    prev_us.nice = parse_nth_number(prev, 3);
-    prev_us.system = parse_nth_number(prev, 4);
-    printf("user: %d, nice %d, system %d,",prev_us.user,prev_us.nice, prev_us.system);
-    printf("idle: %d, ") 
+    for(int i = 0 ; i < 7; i++)
+        printf("%LF ",p[i]);
+    printf("\n");
+    for(int i = 0 ; i < 7; i++)
+        printf("%LF ",n[i]);
+    printf("\n");
     
-    free(new); free(prev);
-    return prev;
+    p_sum = p[0] + p[1] + p[2] + p[3];
+    n_sum = n[0] + n[1] + n[2] + n[3];
+    cpu_perc = ( (100*( n_sum - p_sum) - (n[3] - p[3])) / (n_sum - p_sum));
+    printf("%LF \n",cpu_perc);
 
+    //todo does not work 
+    return ;
+
+/**
+    PrevIdle = previdle + previowait
+    Idle = idle + iowait
+
+    PrevNonIdle = prevuser + prevnice + prevsystem + previrq + prevsoftirq + prevsteal
+    NonIdle = user + nice + system + irq + softirq + steal
+
+    PrevTotal = PrevIdle + PrevNonIdle
+    Total = Idle + NonIdle
+
+    # differentiate: actual value minus the previous one
+    totald = Total - PrevTotal
+    idled = Idle - PrevIdle
+
+    CPU_Percentage = (totald - idled)/totald
+*/
 
 error_usa_1:
     fprintf(stderr,"Cannot open /proc/stat\n");    
     return NULL;
-
-error_usa_2:
-    fprintf(stderr,"Memory overload\n");    
-    fclose(f);
-    return NULL;
-
 }
 
 /**
