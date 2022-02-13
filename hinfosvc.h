@@ -8,9 +8,24 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
+#include <stdbool.h>
+#include <unistd.h>
+
 
 #define DECIMAL 10
 #define INDENT 33 
+#define MAX_STAT 2048 //Max lenght of /proc/stat first line 
+
+typedef struct usage
+{
+    int user;
+    int nice;
+    int system; 
+    int idle;
+    int iowait;
+    int irq;
+} usage;
+
 
 
 /**
@@ -19,13 +34,6 @@
  * return -1 if args are in bad format  
  */
 int parse_args(int argc, char *argv[]);
-
-/**
- * Return string. 
- * Return null if error  
- */
-char * read_file(FILE *f);
-
 
 /**
  * Return computer network domain name, 
@@ -51,3 +59,23 @@ char * cpu_name();
  * Return cpu usage info.  
  */
 char * cpu_usage();
+
+
+
+/**
+ * Get first line from file.
+ * Max line size is MAX_STAT
+ * if overflow return NULL
+ */
+char * get_first_line(FILE *f);
+
+/**
+ * Return string. 
+ * Return null if error  
+ */
+char * read_file(FILE *f);
+
+/**
+ * Get nth word from string  
+ */
+int parse_nth_number(char *str, int n);
