@@ -29,16 +29,25 @@ int main(int argc, char *argv[]){
     err_code = init_socket(&soc, &server, port_number);
     if (err_code == -1)
         return -1;
-    // init server 
+
+    listen(soc, 3);
+
+    int new_soc, c;
+    struct sockaddr_in client;
+    char * message;
+    puts("waiting\n");
+    while ((new_soc = accept(soc, (struct sockaddr *)&client, (socklen_t*)&c))){
+        puts("connection accepted\n");
+        message = "hovno";
+        write(new_soc, message, strlen(message));
+    } 
+
     
     printf("soc: %d server_port %d, hton: %d", soc, server.sin_port, htons(port_number));
-    
-
-    // set ip add to socket 
-    //bind
-
-
     printf("%d\n", soc);
+
+
+
 
     close(soc);
     return 0;
