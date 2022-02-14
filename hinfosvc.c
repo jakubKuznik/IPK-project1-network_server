@@ -17,16 +17,31 @@
 int main(int argc, char *argv[]){
 
     int port_number; // Http server ll listen on this port.
+    int soc;      // File descriptor of socket will be stored here 
 
     port_number = parse_args(argc, argv);
-    // Program error invalid arguments 
-    if(port_number == -1)
+    if(port_number == -1)  // Program error invalid arguments 
         return -1;
 
+    // create socket 
+    // AF_INET      == ipv4
+    // SOCK_STREAM  == reliable both ways conection (TCP)
+    // 0            == IP protocol 
+    soc = socket(AF_INET, SOCK_STREAM, 0);
+    if (soc == -1)
+        goto err_1;
 
 
+    printf("%d\n", soc);
     return 0;
+
+
+err_1:
+    fprintf(stderr,"Can not create network socket.\n");
+    return -1;
 }
+
+
 
 /**
  * Return string. 

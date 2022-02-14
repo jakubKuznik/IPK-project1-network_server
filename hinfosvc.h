@@ -10,11 +10,27 @@
 #include <string.h>
 #include <stdbool.h>
 #include <unistd.h>
+#include <sys/socket.h>
 
 
 #define DECIMAL 10
 #define INDENT 33 
 #define MAX_STAT 2048 //Max lenght of /proc/stat first line 
+
+
+//* TYPICAL STRUCTURES, WORK WITH NETWORK SOCKET. NOT MY CODE *//
+struct sockaddr_in {
+    short            sin_family;   // e.g. AF_INET
+    unsigned short   sin_port;     // e.g. htons(3490)
+    struct in_addr   sin_addr;     // see struct in_addr, below
+    char             sin_zero[8];  // zero this if you want to
+};
+
+struct in_addr {
+    unsigned long s_addr;  // load with inet_aton()
+};
+//*************************************************************//
+
 
 /**
  * Parse args 
@@ -47,6 +63,7 @@ char * cpu_name();
  * Return cpu usage info.  
  */
 long double cpu_usage();
+
 
 
 /**
