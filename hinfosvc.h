@@ -16,6 +16,7 @@
 #define DECIMAL 10
 #define INDENT 33 
 #define MAX_STAT 2048 //Max lenght of /proc/stat first line 
+#define MESSAGE_MAX_SIZE 8192
 
 #define LOCAL_HOST "127.0.0.1" 
 

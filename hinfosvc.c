@@ -17,7 +17,7 @@
 int main(int argc, char *argv[]){
 
     int port_number;            // Http server ll listen on this port.
-    int soc;                    // File descriptor of socket will be stored here 
+    int ser_soc;                    // File descriptor of socket will be stored here 
     int err_code = 0;
     struct sockaddr_in server;  // 
 
@@ -26,30 +26,41 @@ int main(int argc, char *argv[]){
         return -1;
 
     // create network socket 
-    err_code = init_socket(&soc, &server, port_number);
+    err_code = init_socket(&ser_soc, &server, port_number);
     if (err_code == -1)
         return -1;
 
-    listen(soc, 3);
+    err_code = listen(ser_soc, 3);
+    if (err_code < 0){
+        fprintf(stderr, "Server is not listening \n");
+        return -1;
+    }
 
-    int new_soc, c;
+
+
+    int client_soc, c;
     struct sockaddr_in client;
     char * message;
+    char client_message[MESSAGE_MAX_SIZE];
     puts("waiting\n");
-    while ((new_soc = accept(soc, (struct sockaddr *)&client, (socklen_t*)&c))){
+    while ((client_soc = accept(ser_soc, (struct sockaddr *)&client, (socklen_t*)&c))){
+        // Get client message 
+        recv(client_soc, client_message, 2000, 0);
+        printf("%s",client_message);
+
         puts("connection accepted\n");
         message = "hovno";
-        write(new_soc, message, strlen(message));
+        write(client_soc, message, strlen(message));
     } 
 
     
-    printf("soc: %d server_port %d, hton: %d", soc, server.sin_port, htons(port_number));
-    printf("%d\n", soc);
+    printf("soc: %d server_port %d, hton: %d", ser_soc, server.sin_port, htons(port_number));
+    printf("%d\n", ser_soc);
 
 
 
 
-    close(soc);
+    close(ser_soc);
     return 0;
 
 
@@ -76,13 +87,16 @@ int init_socket(int * soc, struct sockaddr_in * server, int port_number){
     server->sin_addr.s_addr = INADDR_ANY; //binds a socket to all aviable interfaces
 
     // TODO setcokopt to 1 ..,, setsockopt(soc, 1  )
-    //setsockopt(*soc, SO_REUSEADDR);
+    setsockopt(*soc, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, server, sizeof(server));
+
     // bind() // set  ip 
     int err = bind (*soc, (struct sockaddr *)server, sizeof(*server));
     if (err < 0){
         fprintf(stderr,"Can not create network socket.\n");
         return -1;
     }
+
+
 
     return 0;
 }
