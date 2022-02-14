@@ -16,31 +16,71 @@
 
 int main(int argc, char *argv[]){
 
-    int port_number; // Http server ll listen on this port.
-    int soc;      // File descriptor of socket will be stored here 
+    int port_number;            // Http server ll listen on this port.
+    int soc;                    // File descriptor of socket will be stored here 
+    int err_code = 0;
+    struct sockaddr_in server;  // 
 
     port_number = parse_args(argc, argv);
     if(port_number == -1)  // Program error invalid arguments 
         return -1;
 
-    // create socket 
-    // AF_INET      == ipv4
-    // SOCK_STREAM  == reliable both ways conection (TCP)
-    // 0            == IP protocol 
-    soc = socket(AF_INET, SOCK_STREAM, 0);
-    if (soc == -1)
-        goto err_1;
+    // create network socket 
+    err_code = init_socket(&soc);
+    if (err_code == -1)
+        return -1;
+    // init server 
+    init_server(&server, port_number);    
+
+
+
+
+    
+    printf("soc: %d\n server_port %d, hton: %d", soc, server.sin_port, htons(port_number));
+    // TODO setcokopt to 1 ..,, setsockopt(soc, 1  )
+    
+
+    // set ip add to socket 
+    //bind
 
 
     printf("%d\n", soc);
     return 0;
 
 
-err_1:
-    fprintf(stderr,"Can not create network socket.\n");
-    return -1;
 }
 
+/**
+ * create socket 
+ * AF_INET      == ipv4
+ * SOCK_STREAM  == reliable both ways conection (TCP)
+ * 0            == IP protocol 
+ * 
+ * return -1 if error 
+ */
+int init_socket(int * soc){
+    *soc = socket(AF_INET, SOCK_STREAM, 0);
+    if (*soc == -1){
+        fprintf(stderr,"Can not create network socket.\n");
+        return -1;
+    }
+
+    return 0;
+}
+
+/**
+ * 
+ * return -1 if error 
+ */
+int init_server(struct sockaddr_in * server, int port_number){
+    
+    // server init port 
+    server->sin_family      = AF_INET;
+    server->sin_port        = htons(port_number);
+    server->sin_addr.s_addr = INADDR_ANY; 
+
+    return 0;
+}
 
 
 /**
