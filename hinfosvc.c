@@ -16,10 +16,12 @@
 
 int main(int argc, char *argv[]){
 
-    int port_number;            // Http server ll listen on this port.
-    int ser_soc;                    // File descriptor of socket will be stored here 
-    int err_code = 0;
-    struct sockaddr_in server;  // 
+    int port_number;                        // Http server ll listen on this port.
+    int ser_soc, client_soc, c;             // File descriptor of sockets will be stored here 
+    int err_code = 0;                       // for error purpose 
+    struct sockaddr_in server, client;      // network struct for client and server sockets 
+    char * message;                         // message that will be sent from server to client 
+    char client_message[MESSAGE_MAX_SIZE];  // Message that i ll get from client. 
 
     port_number = parse_args(argc, argv);
     if(port_number == -1)  // Program error invalid arguments 
@@ -36,16 +38,11 @@ int main(int argc, char *argv[]){
         return -1;
     }
 
-
-
-    int client_soc, c;
-    struct sockaddr_in client;
-    char * message;
-    char client_message[MESSAGE_MAX_SIZE];
-    puts("waiting\n");
+    
     while ((client_soc = accept(ser_soc, (struct sockaddr *)&client, (socklen_t*)&c))){
         // Get client message 
-        recv(client_soc, client_message, 2000, 0);
+        
+        recv(client_soc, client_message, MESSAGE_MAX_SIZE, 0);
         printf("%s",client_message);
 
         puts("connection accepted\n");
@@ -64,6 +61,24 @@ int main(int argc, char *argv[]){
     return 0;
 
 
+}
+
+/**
+ * Parse message from client.  
+ * 
+ * return -1 if not successfull 
+ * return HOSTNAME
+ * return CPUINFO 
+ * return CPULOAD 
+ * 
+ * return UNKNOWN if dont know the message 
+ * 
+ */
+int parse_client_mess(int cli_soc, char client_message[MESSAGE_MAX_SIZE]){
+
+
+
+    return 0;
 }
 
 /**
@@ -213,31 +228,6 @@ error_cpu_2:
     return NULL;
 }
 
-/**
- * Get first line from file.
- * Max line size is MAX_STAT
- * if overflow return NULL
- */
-char * get_first_line(FILE *f){
-    
-    /*** gets first line from /proc/stat */
-    bool overload = true;
-    char *c = malloc(sizeof(char) * MAX_STAT);
-    for(int i = 0; i < MAX_STAT-1; i++){
-        c[i] = fgetc(f); 
-        if(c[i] == '\n' || c[i] == EOF){
-            c[i+1] = '\0';            
-            overload = false;
-            break;
-        }   
-    } 
-    if (overload == true){
-        free(c);    
-        return NULL;
-    }
-
-    return c;
-}
 
 /* 
     from https://stackoverflow.com/questions/23367857/accurate-calculation-of-cpu-usage-given-in-percentage-in-linux
@@ -279,34 +269,16 @@ long double cpu_usage(){
     f = fopen("/proc/stat", "r");
     if (f == NULL)
         goto error_usa_1;
-    /*
-    printf("%s", get_first_line(f));
-    fclose(f);
-    f = fopen("/proc/stat", "r");
-    */
 
     fscanf(f,"%*s %Lf %Lf %Lf %Lf %LF %LF %LF",&p[0],&p[1],&p[2],&p[3],&p[4],&p[5],&p[6]);
     fclose(f);
     usleep(1);
     
-    /*
-    f = fopen("/proc/stat", "r");
-    printf("%s", get_first_line(f));
-    fclose(f);
-    */
 
     f = fopen("/proc/stat", "r");
     fscanf(f,"%*s %Lf %Lf %Lf %Lf %LF %LF %LF",&n[0],&n[1],&n[2],&n[3],&n[4],&n[5],&n[6]);
     fclose(f);
 
-    /*
-    for(int i = 0 ; i < 7; i++)
-        printf("%LF ",p[i]);
-    printf("\n");
-    for(int i = 0 ; i < 7; i++)
-        printf("%LF ",n[i]);
-    printf("\n");
-    */
 
     // PrevIdle = previdle + previowait
     // Idle = idle + iowait
