@@ -17,6 +17,7 @@
 #define INDENT 33 
 #define MAX_STAT 2048 //Max lenght of /proc/stat first line 
 
+#define LOCAL_HOST "127.0.0.1" 
 
 /**
  * Parse args 
@@ -68,11 +69,11 @@ char * read_file(FILE *f);
 
 
 /**
+ * create socket 
+ * AF_INET      == ipv4
+ * SOCK_STREAM  == reliable both ways conection (TCP)
+ * 0            == IP protocol 
+ * 
  * return -1 if error 
  */
-int init_socket(int * soc);
-
-/**
- * return -1 if error 
- */
-int init_server(struct sockaddr_in * server, int port_number);
+int init_socket(int * soc, struct sockaddr_in * server, int port_number);

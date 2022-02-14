@@ -26,18 +26,12 @@ int main(int argc, char *argv[]){
         return -1;
 
     // create network socket 
-    err_code = init_socket(&soc);
+    err_code = init_socket(&soc, &server, port_number);
     if (err_code == -1)
         return -1;
     // init server 
-    init_server(&server, port_number);    
-
-
-
-
     
-    printf("soc: %d\n server_port %d, hton: %d", soc, server.sin_port, htons(port_number));
-    // TODO setcokopt to 1 ..,, setsockopt(soc, 1  )
+    printf("soc: %d server_port %d, hton: %d", soc, server.sin_port, htons(port_number));
     
 
     // set ip add to socket 
@@ -45,6 +39,8 @@ int main(int argc, char *argv[]){
 
 
     printf("%d\n", soc);
+
+    close(soc);
     return 0;
 
 
@@ -58,26 +54,26 @@ int main(int argc, char *argv[]){
  * 
  * return -1 if error 
  */
-int init_socket(int * soc){
+int init_socket(int * soc, struct sockaddr_in * server, int port_number){
+    
     *soc = socket(AF_INET, SOCK_STREAM, 0);
     if (*soc == -1){
         fprintf(stderr,"Can not create network socket.\n");
         return -1;
     }
-
-    return 0;
-}
-
-/**
- * 
- * return -1 if error 
- */
-int init_server(struct sockaddr_in * server, int port_number){
     
-    // server init port 
-    server->sin_family      = AF_INET;
+    server->sin_family      = AF_INET; //ipv4
     server->sin_port        = htons(port_number);
-    server->sin_addr.s_addr = INADDR_ANY; 
+    server->sin_addr.s_addr = INADDR_ANY; //binds a socket to all aviable interfaces
+
+    // TODO setcokopt to 1 ..,, setsockopt(soc, 1  )
+    //setsockopt(*soc, SO_REUSEADDR);
+    // bind() // set  ip 
+    int err = bind (*soc, (struct sockaddr *)server, sizeof(*server));
+    if (err < 0){
+        fprintf(stderr,"Can not create network socket.\n");
+        return -1;
+    }
 
     return 0;
 }
