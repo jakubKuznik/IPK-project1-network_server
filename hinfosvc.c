@@ -24,6 +24,7 @@ int main(int argc, char *argv[]){
         return -1;
 
 
+
     return 0;
 }
 
@@ -194,68 +195,70 @@ char * get_first_line(FILE *f){
  * 
  * U HAVE TO FREE MEMORY!!
  */
-double cpu_usage(){
+long double cpu_usage(){
     //     [0]     [1]    [2]     [3]       [4]    [5]   [6]      [7]    [8]    [9]
     //     user    nice   system  idle      iowait irq   softirq  steal  guest  guest_nice
     //cpu  74608   2520   24433   1117073   6176   4054  0        0      0      0
-    long double p[7], n[7], cpu_perc, p_sum, n_sum, totald, idleld; // previous new
+    long double p[7], n[7], cpu_perc, prev_idle, idle, prev_non_idle, non_idle, prev_total, total, total_ld, idled; // previous new
     FILE *f = NULL;
    
     f = fopen("/proc/stat", "r");
     if (f == NULL)
         goto error_usa_1;
-    
+    /*
     printf("%s", get_first_line(f));
     fclose(f);
     f = fopen("/proc/stat", "r");
+    */
 
     fscanf(f,"%*s %Lf %Lf %Lf %Lf %LF %LF %LF",&p[0],&p[1],&p[2],&p[3],&p[4],&p[5],&p[6]);
     fclose(f);
-    usleep(0.5);
-
+    usleep(1);
+    
+    /*
     f = fopen("/proc/stat", "r");
     printf("%s", get_first_line(f));
     fclose(f);
-    
+    */
+
     f = fopen("/proc/stat", "r");
     fscanf(f,"%*s %Lf %Lf %Lf %Lf %LF %LF %LF",&n[0],&n[1],&n[2],&n[3],&n[4],&n[5],&n[6]);
     fclose(f);
 
+    /*
     for(int i = 0 ; i < 7; i++)
         printf("%LF ",p[i]);
     printf("\n");
     for(int i = 0 ; i < 7; i++)
         printf("%LF ",n[i]);
     printf("\n");
-    
-    p_sum = p[0] + p[1] + p[2] + p[3];
-    n_sum = n[0] + n[1] + n[2] + n[3];
-    cpu_perc = ( (100*( n_sum - p_sum) - (n[3] - p[3])) / (n_sum - p_sum));
-    printf("%LF \n",cpu_perc);
+    */
 
-    //todo does not work 
-    return ;
+    // PrevIdle = previdle + previowait
+    // Idle = idle + iowait
+    prev_idle = p[3] + p[4];
+    idle = n[3] + n[4];
 
-/**
-    PrevIdle = previdle + previowait
-    Idle = idle + iowait
+    // PrevNonIdle = prevuser + prevnice + prevsystem + previrq + prevsoftirq + prevsteal
+    // NonIdle = user + nice + system + irq + softirq + steal
+    prev_non_idle = p[0] + p[1] + p[2] + p[5] + p[6] + p[7];
+    non_idle = n[0] + n[1] + n[2] + n[5] + n[6] + n[7];
 
-    PrevNonIdle = prevuser + prevnice + prevsystem + previrq + prevsoftirq + prevsteal
-    NonIdle = user + nice + system + irq + softirq + steal
 
-    PrevTotal = PrevIdle + PrevNonIdle
-    Total = Idle + NonIdle
+    prev_total = prev_idle + prev_non_idle;
+    total = idle + non_idle;
+    total_ld = total - prev_total;
+    idled = idle - prev_idle;
+    cpu_perc = (total_ld - idled)/total_ld;
 
-    # differentiate: actual value minus the previous one
-    totald = Total - PrevTotal
-    idled = Idle - PrevIdle
 
-    CPU_Percentage = (totald - idled)/totald
-*/
+    printf("cpu: %LF \n",cpu_perc);
+    return cpu_perc;
+
 
 error_usa_1:
     fprintf(stderr,"Cannot open /proc/stat\n");    
-    return NULL;
+    return -1;
 }
 
 /**

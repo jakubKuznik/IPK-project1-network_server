@@ -46,8 +46,7 @@ char * cpu_name();
 /**
  * Return cpu usage info.  
  */
-char * cpu_usage();
-
+long double cpu_usage();
 
 
 /**
