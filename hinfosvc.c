@@ -23,7 +23,7 @@ int main(int argc, char *argv[]){
     char client_message[MESSAGE_MAX_SIZE];  // Message that i ll get from client. 
 
     port_number = parse_args(argc, argv);
-    if(port_number == -1)  // Program error invalid arguments 
+    if(port_number == -1) // Program error invalid arguments 
         return -1;
 
     // create network socket 
@@ -31,14 +31,15 @@ int main(int argc, char *argv[]){
     if (err_code == -1)
         return -1;
 
+    // Listen on that socket 
     err_code = listen(ser_soc, 3);
     if (err_code < 0){
         fprintf(stderr, "Server is not listening \n");
         return -1;
     }
 
-    int m = 0;
-    char message[MESSAGE_MAX_SIZE];
+    int m = 0;                      // indicator 
+    char message[MESSAGE_MAX_SIZE]; // Message that ll be sent to client 
     // INFINITE TIME SERVER 
     while (true){
         client_soc = accept(ser_soc, (struct sockaddr *)&client, (socklen_t*)&c);
@@ -46,22 +47,18 @@ int main(int argc, char *argv[]){
             // Get client message 
             m = parse_client_mess(client_soc, client_message);
             if (m == HOSTNAME){
-                printf("tu");
                 strcat(message, mess_gud);
                 strcat(message, hostname());
                 send(client_soc, message, strlen(message),0);
             }
             else if (m == CPUINFO){
-                printf("tu");
                 strcat(message, mess_gud);
                 strcat(message, cpu_name());
                 send(client_soc, message, strlen(message),0);
             }
             else if (m == CPULOAD){
-                printf("tu");
                 strcat(message, mess_gud);
                 strcat(message, cpu_usage());
-                strcat(message, "%");
                 send(client_soc, message, strlen(message),0);
             }
             else if (m == UNKNOWN){
@@ -76,16 +73,6 @@ int main(int argc, char *argv[]){
     
     close(ser_soc);
     return 0;
-}
-/**
- * Create string response to client http request 
- * 
- * type defines type of message: HOSTNAME, CPUINFO, UNKNOWN, CPULOAD  
- */
-char * response(int type){
-    char message[MESSAGE_MAX_SIZE];
-
-
 }
 
 /**
@@ -157,7 +144,7 @@ int init_socket(int * soc, struct sockaddr_in * server, int port_number){
     server->sin_addr.s_addr = INADDR_ANY; //binds a socket to all aviable interfaces
 
     // TODO setcokopt to 1 ..,, setsockopt(soc, 1  )
-    setsockopt(*soc, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, server, sizeof(server));
+    setsockopt(*soc, SOL_SOCKET, SO_REUSEADDR , server, sizeof(server));
 
     // bind() == set  ip 
     int err = bind (*soc, (struct sockaddr *)server, sizeof(*server));
