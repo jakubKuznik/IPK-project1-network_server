@@ -39,7 +39,7 @@ int main(int argc, char *argv[]){
     }
 
     int m = 0;                      // indicator 
-    char message[MESSAGE_MAX_SIZE]; // Message that ll be sent to client 
+    char message[MESSAGE_MAX_SIZE] = ""; // Message that ll be sent to client 
     // INFINITE TIME SERVER 
     while (true){
         client_soc = accept(ser_soc, (struct sockaddr *)&client, (socklen_t*)&c);
@@ -67,7 +67,8 @@ int main(int argc, char *argv[]){
             else{
                 fprintf(stderr, "Cannot read client socket message\n");
             }
-            message[0] = '\0'; 
+            message[0] = '\0';
+            close(client_soc); 
         }
     } 
     
