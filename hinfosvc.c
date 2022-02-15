@@ -46,18 +46,22 @@ int main(int argc, char *argv[]){
             // Get client message 
             m = parse_client_mess(client_soc, client_message);
             if (m == HOSTNAME){
+                printf("tu");
                 strcat(message, mess_gud);
                 strcat(message, hostname());
                 send(client_soc, message, strlen(message),0);
             }
             else if (m == CPUINFO){
+                printf("tu");
                 strcat(message, mess_gud);
                 strcat(message, cpu_name());
                 send(client_soc, message, strlen(message),0);
             }
             else if (m == CPULOAD){
+                printf("tu");
                 strcat(message, mess_gud);
                 strcat(message, cpu_usage());
+                strcat(message, "%");
                 send(client_soc, message, strlen(message),0);
             }
             else if (m == UNKNOWN){
@@ -72,6 +76,16 @@ int main(int argc, char *argv[]){
     
     close(ser_soc);
     return 0;
+}
+/**
+ * Create string response to client http request 
+ * 
+ * type defines type of message: HOSTNAME, CPUINFO, UNKNOWN, CPULOAD  
+ */
+char * response(int type){
+    char message[MESSAGE_MAX_SIZE];
+
+
 }
 
 /**
@@ -306,54 +320,60 @@ char * cpu_usage(){
     //     [0]     [1]    [2]     [3]       [4]    [5]   [6]      [7]    [8]    [9]
     //     user    nice   system  idle      iowait irq   softirq  steal  guest  guest_nice
     //cpu  74608   2520   24433   1117073   6176   4054  0        0      0      0
-    long double p[7], n[7], cpu_perc, prev_idle, idle, prev_non_idle, non_idle, prev_total, total, total_ld, idled; // previous new
+    long long int p[10], n[10];
+    long long int prev_idle, idle, prev_non_idle, non_idle, prev_total, total, total_ld, idled;
+    double cpu_perc;
+
     FILE *f = NULL;
-   
     f = fopen("/proc/stat", "r");
     if (f == NULL)
         goto error_usa_1;
 
-    fscanf(f,"%*s %Lf %Lf %Lf %Lf %LF %LF %LF",&p[0],&p[1],&p[2],&p[3],&p[4],&p[5],&p[6]);
+    // Measure first values 
+    fscanf(f,"cpu %lli   %lli   %lli   %lli   %lli   %lli %lli   %lli    %lli   %lli "\
+                 ,&p[0], &p[1], &p[2], &p[3], &p[4],&p[5],&p[6], &p[7], &p[8], &p[9]);
     fclose(f);
-    usleep(1);
     
-
+    sleep(1);
+    
+    // Measure second time 
     f = fopen("/proc/stat", "r");
-    fscanf(f,"%*s %Lf %Lf %Lf %Lf %LF %LF %LF",&n[0],&n[1],&n[2],&n[3],&n[4],&n[5],&n[6]);
+    fscanf(f,"cpu %lli %lli %lli   %lli  %lli  %lli   %lli  %lli    %lli   %lli "\
+                ,&n[0],&n[1],&n[2],&n[3],&n[4],&n[5],&n[6], &n[7], &n[8], &n[9]);
     fclose(f);
 
+    prev_idle   = p[3] + p[4];
+    idle        = n[3] + n[4];
 
-    // PrevIdle = previdle + previowait
-    // Idle = idle + iowait
-    prev_idle = p[3] + p[4];
-    idle = n[3] + n[4];
+    prev_non_idle   = p[0] + p[1] + p[2] + p[5] + p[6] + p[7];
+    non_idle        = n[0] + n[1] + n[2] + n[5] + n[6] + n[7];
 
-    // PrevNonIdle = prevuser + prevnice + prevsystem + previrq + prevsoftirq + prevsteal
-    // NonIdle = user + nice + system + irq + softirq + steal
-    prev_non_idle = p[0] + p[1] + p[2] + p[5] + p[6] + p[7];
-    non_idle = n[0] + n[1] + n[2] + n[5] + n[6] + n[7];
+    prev_total  = prev_idle + prev_non_idle;
+    total       = idle + non_idle;
+
+    total_ld    = total - prev_total;
+    idled       = idle - prev_idle;
+
+    // if There is 0 divison set to 100%
+    if (total_ld == 0) cpu_perc = 100;
+    else cpu_perc = ((total_ld - idled) / (double)total_ld)*100;
 
 
-    prev_total = prev_idle + prev_non_idle;
-    total = idle + non_idle;
-    total_ld = total - prev_total;
-    idled = idle - prev_idle;
-    cpu_perc = (total_ld - idled)/total_ld;
+    int cpu_int = (int)cpu_perc;
 
-    //conversion
-    int v = cpu_perc;
-    char *cpu_load = malloc(sizeof(char) * MAX_STAT);
+    char *cpu_load = malloc(sizeof(char) *2000);
     if (cpu_load == NULL)
         return NULL;
 
-    sprintf(cpu_load, "%d", v);
+    sprintf(cpu_load, "%d", cpu_int);
     return cpu_load;
 
 
 error_usa_1:
-    fprintf(stderr,"Cannot open /proc/stat\n");    
+    fprintf(stderr,"Cannot open /proc/stat\n");
     return NULL;
 }
+
 
 /**
  *  Parse args 

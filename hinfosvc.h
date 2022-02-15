@@ -98,3 +98,11 @@ int init_socket(int * soc, struct sockaddr_in * server, int port_number);
  * 
  */
 int parse_client_mess(int client_soc, char client_message[MESSAGE_MAX_SIZE]);
+
+
+/**
+ * Create string response to client http request 
+ * 
+ * type defines type of message: HOSTNAME, CPUINFO, UNKNOWN, CPULOAD  
+ */
+char * response(int type);
