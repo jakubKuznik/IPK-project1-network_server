@@ -20,7 +20,6 @@ int main(int argc, char *argv[]){
     int ser_soc, client_soc, c;             // File descriptor of sockets will be stored here 
     int err_code = 0;                       // for error purpose 
     struct sockaddr_in server, client;      // network struct for client and server sockets 
-    char * message;                         // message that will be sent from server to client 
     char client_message[MESSAGE_MAX_SIZE];  // Message that i ll get from client. 
 
     port_number = parse_args(argc, argv);
@@ -38,29 +37,41 @@ int main(int argc, char *argv[]){
         return -1;
     }
 
-    
-    while ((client_soc = accept(ser_soc, (struct sockaddr *)&client, (socklen_t*)&c))){
-        // Get client message 
-        
-        recv(client_soc, client_message, MESSAGE_MAX_SIZE, 0);
-        printf("%s",client_message);
-
-        puts("connection accepted\n");
-        message = "hovno";
-        write(client_soc, message, strlen(message));
+    int m = 0;
+    char message[MESSAGE_MAX_SIZE];
+    // INFINITE TIME SERVER 
+    while (true){
+        client_soc = accept(ser_soc, (struct sockaddr *)&client, (socklen_t*)&c);
+        if (client_soc > 0){
+            // Get client message 
+            m = parse_client_mess(client_soc, client_message);
+            if (m == HOSTNAME){
+                strcat(message, mess_gud);
+                strcat(message, hostname());
+                send(client_soc, message, strlen(message),0);
+            }
+            else if (m == CPUINFO){
+                strcat(message, mess_gud);
+                strcat(message, cpu_name());
+                send(client_soc, message, strlen(message),0);
+            }
+            else if (m == CPULOAD){
+                strcat(message, mess_gud);
+                strcat(message, cpu_usage());
+                send(client_soc, message, strlen(message),0);
+            }
+            else if (m == UNKNOWN){
+                send(client_soc, mess_bad, strlen(mess_bad),0);
+            }
+            else{
+                fprintf(stderr, "Cannot read client socket message\n");
+            }
+            message[0] = '\0'; 
+        }
     } 
-
     
-    printf("soc: %d server_port %d, hton: %d", ser_soc, server.sin_port, htons(port_number));
-    printf("%d\n", ser_soc);
-
-
-
-
     close(ser_soc);
     return 0;
-
-
 }
 
 /**
@@ -74,11 +85,41 @@ int main(int argc, char *argv[]){
  * return UNKNOWN if dont know the message 
  * 
  */
-int parse_client_mess(int cli_soc, char client_message[MESSAGE_MAX_SIZE]){
+int parse_client_mess(int client_soc, char client_message[MESSAGE_MAX_SIZE]){
 
+    char help[MESSAGE_MAX_SIZE];
+    recv(client_soc, client_message, MESSAGE_MAX_SIZE, 0);
+    bool succes = false;
 
+    // mesage format 
+    // GET /hostname HTTP/1.1
+    // this for just store get message if there is some 
+    for (int i = 0; i <= MESSAGE_MAX_SIZE; i++){
+        if (i < MESSAGE_MAX_SIZE - 5){
+            if (client_message[i] == 'G' && client_message[i+1] == 'E' && \
+                client_message[i+2] == 'T'){
+                i = +4;
+                for (int j = 0; j < MESSAGE_MAX_SIZE; j++){
+                    if (client_message[i] == ' ') 
+                        break;
+                    help[j] = client_message[i++];
+                    help[j+1] = '\0';
+                }
+                succes = true;
+            }
+        }
+    }
+    if (succes == false)
+        return -1;
 
-    return 0;
+    if ((strcmp(help, "/hostname")) == 0)
+        return HOSTNAME;
+    else if ((strcmp(help, "/cpu-name")) == 0)
+        return CPUINFO;
+    else if ((strcmp(help, "/load")) == 0)
+        return CPULOAD;
+    else
+        return UNKNOWN;
 }
 
 /**
@@ -104,15 +145,13 @@ int init_socket(int * soc, struct sockaddr_in * server, int port_number){
     // TODO setcokopt to 1 ..,, setsockopt(soc, 1  )
     setsockopt(*soc, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, server, sizeof(server));
 
-    // bind() // set  ip 
+    // bind() == set  ip 
     int err = bind (*soc, (struct sockaddr *)server, sizeof(*server));
     if (err < 0){
         fprintf(stderr,"Can not create network socket.\n");
         return -1;
     }
-
-
-
+    
     return 0;
 }
 
@@ -167,6 +206,10 @@ char * hostname(){
     char *hostname = read_file(f);
     if (hostname == NULL)
         goto error_hostname_2;
+
+    int i = 0;
+    for(; hostname[i] != '\n'; i++){;}
+    hostname[i+1] = '\0';
 
     return hostname;
 
@@ -253,13 +296,13 @@ error_cpu_2:
 
 /**
  * Return cpu usage info. 
- * Return (-inf, -1) if error 
+ * return NULL if error 
  * 
  * Calculate cpu usage from /proc/stat 
  * 
  * U HAVE TO FREE MEMORY!!
  */
-long double cpu_usage(){
+char * cpu_usage(){
     //     [0]     [1]    [2]     [3]       [4]    [5]   [6]      [7]    [8]    [9]
     //     user    nice   system  idle      iowait irq   softirq  steal  guest  guest_nice
     //cpu  74608   2520   24433   1117073   6176   4054  0        0      0      0
@@ -297,14 +340,19 @@ long double cpu_usage(){
     idled = idle - prev_idle;
     cpu_perc = (total_ld - idled)/total_ld;
 
+    //conversion
+    int v = cpu_perc;
+    char *cpu_load = malloc(sizeof(char) * MAX_STAT);
+    if (cpu_load == NULL)
+        return NULL;
 
-    printf("cpu: %LF \n",cpu_perc);
-    return cpu_perc;
+    sprintf(cpu_load, "%d", v);
+    return cpu_load;
 
 
 error_usa_1:
     fprintf(stderr,"Cannot open /proc/stat\n");    
-    return -1;
+    return NULL;
 }
 
 /**

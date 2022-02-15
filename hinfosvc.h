@@ -17,6 +17,16 @@
 #define INDENT 33 
 #define MAX_STAT 2048 //Max lenght of /proc/stat first line 
 #define MESSAGE_MAX_SIZE 8192
+#define SIZE 128
+
+#define HOSTNAME 0
+#define CPUINFO 1
+#define CPULOAD 2
+#define UNKNOWN 3
+
+char mess_gud[MESSAGE_MAX_SIZE] = "HTTP/1.1 200 OK\r\nContent-Type: text/ plain;\r\n\r\n";
+char mess_bad[MESSAGE_MAX_SIZE] = "400 Bad Request";
+
 
 #define LOCAL_HOST "127.0.0.1" 
 
@@ -48,25 +58,21 @@ char * hostname();
 char * cpu_name();
 
 /**
- * Return cpu usage info.  
+ * Return cpu usage info. 
+ * return NULL if error 
+ * 
+ * Calculate cpu usage from /proc/stat 
+ * 
+ * U HAVE TO FREE MEMORY!!
  */
-long double cpu_usage();
+char * cpu_usage();
 
-
-
-/**
- * Get first line from file.
- * Max line size is MAX_STAT
- * if overflow return NULL
- */
-char * get_first_line(FILE *f);
 
 /**
  * Return string. 
  * Return null if error  
  */
 char * read_file(FILE *f);
-
 
 
 /**
@@ -78,3 +84,17 @@ char * read_file(FILE *f);
  * return -1 if error 
  */
 int init_socket(int * soc, struct sockaddr_in * server, int port_number);
+
+
+/**
+ * Parse message from client.  
+ * 
+ * return -1 if not successfull 
+ * return HOSTNAME
+ * return CPUINFO 
+ * return CPULOAD 
+ * 
+ * return UNKNOWN if dont know the message 
+ * 
+ */
+int parse_client_mess(int client_soc, char client_message[MESSAGE_MAX_SIZE]);
