@@ -68,7 +68,7 @@ int main(int argc, char *argv[]){
                 fprintf(stderr, "Cannot read client socket message\n");
             }
             message[0] = '\0';
-            close(client_soc); 
+            close(client_soc);
         }
     } 
     
@@ -211,7 +211,7 @@ char * hostname(){
 
     int i = 0;
     for(; hostname[i] != '\n'; i++){;}
-    hostname[i+1] = '\0';
+    hostname[i] = '\0';
 
     return hostname;
 
@@ -254,13 +254,32 @@ char * cpu_name(){
 
     // format i want is
     // Intel(R) Core(TM) i7-4810MQ CPU @ 2.80GHz    return cpu_name;
-    long unsigned int i = 0;
-    for (; i <= strlen(cpu_name);){
-        if(i >= INDENT)
-            cpu_name[i-INDENT] = cpu_name[i];
-        i++;
+    int j = 0;
+    
+    // skip Model name: 
+    for (; cpu_name[j] != ':' ; j++)
+        ;
+    j++;
+    
+    // skip spaces
+    for (; ; j++){
+        if(cpu_name[j] == ' ')
+            continue;
+        else {
+            j--;
+            break;
+        }
     }
-    cpu_name[i-INDENT-2] = 0;
+
+    for (int i = 0; j <= MESSAGE_MAX_SIZE;i ++){
+        printf("%c",cpu_name[j]);
+        j++;
+        if(cpu_name[j] == '\n'){
+            cpu_name[i] = '\0';
+            break;
+        }
+        cpu_name[i] = cpu_name[j];
+    }
 
     return cpu_name;
 
