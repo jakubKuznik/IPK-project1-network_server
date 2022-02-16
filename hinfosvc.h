@@ -11,7 +11,8 @@
 #include <stdbool.h>
 #include <unistd.h>
 #include <sys/socket.h>
-#include <arpa/inet.h>	
+#include <arpa/inet.h>
+#include <signal.h>	
 
 #define DECIMAL 10
 #define INDENT 33 
@@ -26,6 +27,9 @@
 
 char mess_gud[MESSAGE_MAX_SIZE] = "HTTP/1.1 200 OK\r\nContent-Type: text/ plain;\r\n\r\n";
 char mess_bad[MESSAGE_MAX_SIZE] = "400 Bad Request";
+
+// Variable has to be global becouse of signal handler.
+int ser_soc; 
 
 
 #define LOCAL_HOST "127.0.0.1" 
@@ -99,3 +103,8 @@ int init_socket(int * soc, struct sockaddr_in * server, int port_number);
  */
 int parse_client_mess(int client_soc, char client_message[MESSAGE_MAX_SIZE]);
 
+
+/**
+ * Free resource after signal SIGINT  
+ */
+void free_resources(int sig_num);

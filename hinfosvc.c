@@ -17,7 +17,7 @@
 int main(int argc, char *argv[]){
 
     int port_number;                        // Http server ll listen on this port.
-    int ser_soc, client_soc, c;             // File descriptor of sockets will be stored here 
+    int client_soc, c;             // File descriptor of sockets will be stored here 
     int err_code = 0;                       // for error purpose 
     struct sockaddr_in server, client;      // network struct for client and server sockets 
     char client_message[MESSAGE_MAX_SIZE];  // Message that i ll get from client. 
@@ -40,26 +40,41 @@ int main(int argc, char *argv[]){
 
     int m = 0;                      // indicator 
     char message[MESSAGE_MAX_SIZE] = ""; // Message that ll be sent to client 
+    char * help = NULL;
     // INFINITE TIME SERVER 
+    // SIGINT signal handler
+    struct sigaction sigIntHandler;
+    sigIntHandler.sa_handler = free_resources;
+    sigemptyset(&sigIntHandler.sa_mask);
+    sigIntHandler.sa_flags = 0;
     while (true){
+        // closing all resources if the SIGINT signal was received
+        sigaction(SIGINT, &sigIntHandler, NULL);
+        
         client_soc = accept(ser_soc, (struct sockaddr *)&client, (socklen_t*)&c);
         if (client_soc > 0){
             // Get client message 
             m = parse_client_mess(client_soc, client_message);
             if (m == HOSTNAME){
+                help = hostname();
                 strcat(message, mess_gud);
-                strcat(message, hostname());
+                strcat(message, help);
                 send(client_soc, message, strlen(message),0);
+                free(help);
             }
             else if (m == CPUINFO){
+                help = cpu_name();
                 strcat(message, mess_gud);
-                strcat(message, cpu_name());
+                strcat(message, help);
                 send(client_soc, message, strlen(message),0);
+                free(help);
             }
             else if (m == CPULOAD){
+                help = cpu_usage();
                 strcat(message, mess_gud);
-                strcat(message, cpu_usage());
+                strcat(message, help);
                 send(client_soc, message, strlen(message),0);
+                free(help);
             }
             else if (m == UNKNOWN){
                 send(client_soc, mess_bad, strlen(mess_bad),0);
@@ -74,6 +89,17 @@ int main(int argc, char *argv[]){
     
     close(ser_soc);
     return 0;
+}
+
+/**
+ * Free resource after signal SIGINT  
+ */
+void free_resources(int sig_num){
+  
+    // close socket etc.
+    fprintf(stderr, "[signal %d] -> server socket was closed\n", sig_num);
+    close(ser_soc);
+    exit(1); 
 }
 
 /**
