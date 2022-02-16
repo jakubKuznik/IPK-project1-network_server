@@ -97,7 +97,7 @@ int main(int argc, char *argv[]){
 void free_resources(int sig_num){
   
     // close socket etc.
-    fprintf(stderr, "[signal %d] -> server socket was closed\n", sig_num);
+    fprintf(stderr, "[signal %d] -> Process killed\n", sig_num);
     close(ser_soc);
     exit(1); 
 }
@@ -170,8 +170,8 @@ int init_socket(int * soc, struct sockaddr_in * server, int port_number){
     server->sin_port        = htons(port_number);
     server->sin_addr.s_addr = INADDR_ANY; //binds a socket to all aviable interfaces
 
-    // TODO setcokopt to 1 ..,, setsockopt(soc, 1  )
-    setsockopt(*soc, SOL_SOCKET, SO_REUSEADDR , server, sizeof(server));
+    int opt = 1; 
+    setsockopt(*soc, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT , &opt, sizeof(opt));
 
     // bind() == set  ip 
     int err = bind (*soc, (struct sockaddr *)server, sizeof(*server));
@@ -298,7 +298,6 @@ char * cpu_name(){
     }
 
     for (int i = 0; j <= MESSAGE_MAX_SIZE;i ++){
-        printf("%c",cpu_name[j]);
         j++;
         if(cpu_name[j] == '\n'){
             cpu_name[i] = '\0';
