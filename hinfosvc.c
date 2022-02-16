@@ -17,7 +17,7 @@
 int main(int argc, char *argv[]){
 
     int port_number;                        // Http server ll listen on this port.
-    int client_soc, c;             // File descriptor of sockets will be stored here 
+    int client_soc, c = 0;             // File descriptor of sockets will be stored here 
     int err_code = 0;                       // for error purpose 
     struct sockaddr_in server, client;      // network struct for client and server sockets 
     char client_message[MESSAGE_MAX_SIZE];  // Message that i ll get from client. 
