@@ -40,6 +40,7 @@ int main(int argc, char *argv[]){
 
     int m = 0;                      // indicator 
     char message[MESSAGE_MAX_SIZE] = ""; // Message that ll be sent to client 
+    char cont_size[MESSAGE_MAX_SIZE] = "";  
     char * help = NULL;
     // INFINITE TIME SERVER 
     // SIGINT signal handler
@@ -58,6 +59,10 @@ int main(int argc, char *argv[]){
             if (m == HOSTNAME){
                 help = hostname();
                 strcat(message, mess_gud);
+                strcat(message, mess_content_len);
+                sprintf(cont_size, "%ld", strlen(help));
+                strcat(message, cont_size);
+                strcat(message, mess_end);
                 strcat(message, help);
                 send(client_soc, message, strlen(message),0);
                 free(help);
@@ -65,6 +70,10 @@ int main(int argc, char *argv[]){
             else if (m == CPUINFO){
                 help = cpu_name();
                 strcat(message, mess_gud);
+                strcat(message, mess_content_len);
+                sprintf(cont_size, "%ld", strlen(help));
+                strcat(message, cont_size);
+                strcat(message, mess_end);
                 strcat(message, help);
                 send(client_soc, message, strlen(message),0);
                 free(help);
@@ -72,6 +81,10 @@ int main(int argc, char *argv[]){
             else if (m == CPULOAD){
                 help = cpu_usage();
                 strcat(message, mess_gud);
+                strcat(message, mess_content_len);
+                sprintf(cont_size, "%ld", strlen(help));
+                strcat(message, cont_size);
+                strcat(message, mess_end);
                 strcat(message, help);
                 send(client_soc, message, strlen(message),0);
                 free(help);

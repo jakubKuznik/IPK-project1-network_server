@@ -25,7 +25,9 @@
 #define CPULOAD 2
 #define UNKNOWN 3
 
-char mess_gud[MESSAGE_MAX_SIZE] = "HTTP/1.1 200 OK\r\nContent-Type: text/ plain;\r\n\r\n";
+char mess_gud[MESSAGE_MAX_SIZE] = "HTTP/1.1 200 OK\r\ncontent-Type: text/ plain;\r\n";
+char mess_content_len[MESSAGE_MAX_SIZE] = "content-lenght: ";
+char mess_end[MESSAGE_MAX_SIZE] = ";\r\n\r\n";
 char mess_bad[MESSAGE_MAX_SIZE] = "400 Bad Request";
 
 // Variable has to be global becouse of signal handler.
